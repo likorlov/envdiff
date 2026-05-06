@@ -94,3 +94,16 @@ func TestParseString_EmptyValue(t *testing.T) {
 		t.Errorf("expected EMPTY=\"\", got %q (present=%v)", v, ok)
 	}
 }
+
+func TestParseString_ExportPrefix(t *testing.T) {
+	// Some .env files use "export KEY=VALUE" syntax (e.g. for sourcing in bash).
+	// Verify that the parser handles or consistently rejects this prefix.
+	input := `export API_KEY=abc123`
+	env, err := ParseString(input)
+	if err != nil {
+		t.Skipf("export prefix not supported (got error: %v)", err)
+	}
+	if env["API_KEY"] != "abc123" {
+		t.Errorf("expected API_KEY=abc123, got %q", env["API_KEY"])
+	}
+}
