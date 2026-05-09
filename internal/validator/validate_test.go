@@ -7,9 +7,9 @@ import (
 
 func TestValidate_ValidEnv(t *testing.T) {
 	env := map[string]string{
-		"APP_ENV":  "production",
-		"DB_HOST":  "localhost",
-		"PORT":     "8080",
+		"APP_ENV": "production",
+		"DB_HOST": "localhost",
+		"PORT":    "8080",
 	}
 	violations := Validate(env, DefaultRules)
 	if len(violations) != 0 {
@@ -63,6 +63,23 @@ func TestValidate_MultipleViolations(t *testing.T) {
 	// "bad key" violates NoWhitespaceKeys; "" violates NoEmptyValues
 	if len(violations) < 2 {
 		t.Errorf("expected at least 2 violations, got %d", len(violations))
+	}
+}
+
+func TestValidate_EmptyEnv(t *testing.T) {
+	violations := Validate(map[string]string{}, DefaultRules)
+	if len(violations) != 0 {
+		t.Errorf("expected no violations for empty env, got %d: %v", len(violations), violations)
+	}
+}
+
+func TestValidate_NilRules(t *testing.T) {
+	env := map[string]string{
+		"bad key": "",
+	}
+	violations := Validate(env, nil)
+	if len(violations) != 0 {
+		t.Errorf("expected no violations with nil rules, got %d", len(violations))
 	}
 }
 
