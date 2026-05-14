@@ -10,7 +10,7 @@ import (
 func main() {
 	root := &cobra.Command{
 		Use:   "envdiff",
-		Short: "Diff and reconcile environment variable files",
+		Short: "Diff and reconcile environment variable files across deployment stages",
 	}
 
 	root.AddCommand(
@@ -20,6 +20,9 @@ func main() {
 		newExportCmd(),
 		newMergeCmd(),
 		newLintCmd(),
+		newInterpolateCmd(),
+		newProfileCmd(),
+		newSnapshotCmd(),
 	)
 
 	if err := root.Execute(); err != nil {
@@ -31,38 +34,36 @@ func main() {
 func newDiffCmd() *cobra.Command {
 	var format string
 	cmd := &cobra.Command{
-		Use:   "diff <base> <compare>",
+		Use:   "diff <base> <head>",
 		Short: "Show differences between two env files",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runDiff(args[0], args[1], format)
+			return runDiff(cmd, args, format)
 		},
 	}
-	cmd.Flags().StringVarP(&format, "format", "f", "text", "output format: text, dotenv, json")
+	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text, dotenv, json")
 	return cmd
 }
 
 func newValidateCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "validate <file>",
-		Short: "Validate an env file",
+		Use:   "validate <env-file>",
+		Short: "Validate an env file against common rules",
 		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return runValidate(args[0])
-		},
+		RunE:  runValidate,
 	}
 }
 
 func newReconcileCmd() *cobra.Command {
-	var apply bool
+	var dryRun bool
 	cmd := &cobra.Command{
-		Use:   "reconcile <base> <target>",
-		Short: "Reconcile base env into target",
+		Use:   "reconcile <source> <target>",
+		Short: "Reconcile target env file to match source",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runReconcile(args[0], args[1], apply)
+			return runReconcile(cmd, args, dryRun)
 		},
 	}
-	cmd.Flags().BoolVar(&apply, "apply", false, "write changes to target file")
+	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Print steps without applying")
 	return cmd
 }
